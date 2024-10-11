@@ -9,11 +9,12 @@ namespace Repositories.Contracts
 {
     public interface IBookRepository : IRepositoryBase<Book>
     {
-        IQueryable<Book> GetAllBooks(bool trackChanges);
-        Book GetOneBookById(int id, bool trackChanges); // Bu isim doğru görünüyor.
+        Task<IEnumerable<Book>> GetAllBooksAsync(bool trackChanges);
+        Task<Book> GetOneBookByIdAsync(int id, bool trackChanges);
         void CreateOneBook(Book book);
         void UpdateOneBook(Book book);
         void DeleteOneBook(Book book);
-        void DeleteOneBook(object entity); // Bu metot `object` parametresini alıyor.
+        void DeleteOneBook(object entity);
+        void Update(Task<Book> entity);
     }
 }

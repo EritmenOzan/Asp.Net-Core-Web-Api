@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using NLog;
+using Presentation.ActionFilters;
 using Repositories.EFCore;
 using Services.Contracts;
 using WebApi.Extensions;
@@ -11,8 +12,15 @@ LogFactory logFactory = LogManager.LoadConfiguration(string.Concat(Directory.Get
 
 // Add services to the container.
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(config =>
+{
+    config.RespectBrowserAcceptHeader = true;
+    config.ReturnHttpNotAcceptable = true;
+})
+    .AddXmlDataContractSerializerFormatters()
     .AddApplicationPart(typeof(Presentation.AssemblyReference).Assembly);
+
+builder.Services.AddScoped<ValidationFilterAttribute>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -22,6 +30,7 @@ builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
 builder.Services.ConfigureLoggerService();
 builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.ConfigureActionFilters();
 
 var app = builder.Build();
 

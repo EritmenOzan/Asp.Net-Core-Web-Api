@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
 using Entities.DataTransferObjects;
+using Entities.Exceptions;
 using Entities.Models;
 using Repositories.Contracts;
 using Services.Contracts;
-using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Services
 {
@@ -21,83 +22,56 @@ namespace Services
             _mapper = mapper;
         }
 
-        public Book CreateOneBook(Book book)
+        public async Task<BookDto> CreateOneBookAsync(BookDtoForInsertion book)
         {
-            _manager.Book.CreateOneBook(book);
-            _manager.Save();
-            return book;
+            var entity = _mapper.Map<Book>(book);
+            _manager.Book.CreateOneBook(entity);
+            await _manager.SaveAsync();
+            return _mapper.Map<BookDto>(entity);
         }
 
-        public void DeleteOneBook(int id, bool trackChanges)
+        public async Task DeleteOneBookAsync(int id, bool trackChanges)
         {
-            var entity = _manager.Book.GetOneBookById(id, trackChanges);
-            if (entity is null)
+            var entity = await _manager.Book.GetOneBookByIdAsync(id, trackChanges);
+            if (entity == null)
             {
                 string message = $"Book with id:{id} could not be found.";
                 _logger.LogInfo(message);
-                throw new Exception(message);
+                throw new BookNotFoundException(id);
             }
 
             _manager.Book.DeleteOneBook(entity);
-            _manager.Save();
+            await _manager.SaveAsync();
         }
 
-        public IEnumerable<Book> GetAllBooks(bool trackChanges)
+        public async Task<IEnumerable<BookDto>> GetAllBooksAsync(bool trackChanges)
         {
-            return _manager.Book.GetAllBooks(trackChanges);
+            var books = await _manager.Book.GetAllBooksAsync(trackChanges);
+            return _mapper.Map<IEnumerable<BookDto>>(books);
         }
 
-        public Book GetOneBook(int id, bool trackChanges)
+        public async Task<BookDto> GetOneBookAsync(int id, bool trackChanges)
         {
-            return _manager.Book.GetOneBookById(id, trackChanges);
+            var book = await _manager.Book.GetOneBookByIdAsync(id, trackChanges);
+            if (book == null)
+                throw new BookNotFoundException(id);
+
+            return _mapper.Map<BookDto>(book);
         }
 
-        public object GetOneBookById(int id, bool v)
+        public async Task UpdateOneBookAsync(int id, BookDtoForUpdate bookDto, bool trackChanges)
         {
-            return _manager.Book.GetOneBookById(id, false);
-        }
-
-        public void UpdateOneBook(int id, BookDtoForUpdate bookDto, bool trackChanges)
-        {
-            var entity = _manager.Book.GetOneBookById(id, trackChanges);
-            if (entity is null)
+            var entity = await _manager.Book.GetOneBookByIdAsync(id, trackChanges);
+            if (entity == null)
             {
                 string msg = $"Book with id:{id} could not be found.";
                 _logger.LogInfo(msg);
-                throw new Exception(msg);
+                throw new BookNotFoundException(id);
             }
 
             _mapper.Map(bookDto, entity);
             _manager.Book.Update(entity);
-            _manager.Save();
-        }
-
-        // Eksik metodu ekleyin
-        public void UpdateOneBook(int id, Book book)
-        {
-            var entity = _manager.Book.GetOneBookById(id, true);
-            if (entity is null)
-            {
-                string msg = $"Book with id:{id} could not be found.";
-                _logger.LogInfo(msg);
-                throw new Exception(msg);
-            }
-
-            entity.Title = book.Title; // Örnek güncellemeler
-            entity.Price = book.Price;
-
-            _manager.Book.Update(entity);
-            _manager.Save();
-        }
-
-        public void UpdateOneBook(int id, Book book, bool v)
-        {
-            throw new NotImplementedException();
-        }
-
-        Book IBookService.UpdateOneBook(int id, Book book)
-        {
-            throw new NotImplementedException();
+            await _manager.SaveAsync();
         }
     }
 }

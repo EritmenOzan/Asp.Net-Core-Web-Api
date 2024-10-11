@@ -1,4 +1,5 @@
 ﻿using Entities.Models;
+using Microsoft.EntityFrameworkCore;
 using Repositories.Contracts;
 using System;
 using System.Collections.Generic;
@@ -30,12 +31,19 @@ namespace Repositories.EFCore
             }
         }
 
-        public IQueryable<Book> GetAllBooks(bool trackChanges) =>
-            FindAll(trackChanges).OrderBy(b => b.Id);
+        public async Task<IEnumerable<Book>> GetAllBooksAsync(bool trackChanges) =>
+            await FindAll(trackChanges)
+            .OrderBy(b => b.Id)
+            .ToListAsync();
 
-        public Book GetOneBookById(int id, bool trackChanges) =>
-            FindByCondition(b => b.Id.Equals(id), trackChanges)
-            .SingleOrDefault();
+        public async Task<Book> GetOneBookByIdAsync(int id, bool trackChanges) =>
+            await FindByCondition(b => b.Id.Equals(id), trackChanges)
+            .SingleOrDefaultAsync();
+
+        public void Update(Task<Book> entity)
+        {
+            throw new NotImplementedException();
+        }
 
         public void UpdateOneBook(Book book) => Update(book);
     }

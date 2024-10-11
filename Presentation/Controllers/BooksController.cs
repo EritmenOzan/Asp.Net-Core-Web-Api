@@ -1,16 +1,14 @@
 ﻿using Entities.DataTransferObjects;
 using Entities.Exceptions;
-using Entities.Models;
 using Microsoft.AspNetCore.Mvc;
+using Presentation.ActionFilters;
 using Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Services.Contracts;
 using System.Threading.Tasks;
 
 namespace Presentation.Controllers
 {
+    [ServiceFilter(typeof(LogFilterAttribute))]
     [ApiController]
     [Route("api/books")]
     public class BooksController : ControllerBase
@@ -23,63 +21,47 @@ namespace Presentation.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAllBooks()
+        public async Task<IActionResult> GetAllBooksAsync()
         {
-                var books = _manager.BookService.GetAllBooks(false);
-                return Ok(books);             
+            var books = await _manager.BookService.GetAllBooksAsync(false); // Asenkron çağrı
+            return Ok(books);
         }
 
         [HttpGet("{id:int}")]
-        public IActionResult GetOneBook([FromRoute(Name = "id")] int id)
+        public async Task<IActionResult> GetOneBook([FromRoute(Name = "id")] int id)
         {
-                var book = _manager
-                .BookService
-                .GetOneBookById(id, false);
-
-            if (book == null)
-            {
-                throw new BookNotFoundException(id);
-            }
+            var book = await _manager.BookService.GetOneBookAsync(id, false); // Asenkron çağrı
             return Ok(book);
-
         }
 
+        
+        [ServiceFilter(typeof(ValidationFilterAttribute))]
         [HttpPost]
-        public IActionResult CreateOneBook([FromBody] Book book)
+        public async Task<IActionResult> CreateOneBookAsync([FromBody] BookDtoForInsertion bookDto)
         {
-                if (book is null)
-                    return BadRequest();
-
-                _manager.BookService.CreateOneBook(book);
-
-                return StatusCode(201, book);
+            var book = await _manager.BookService.CreateOneBookAsync(bookDto); // Asenkron çağrı
+            return StatusCode(201, book);
         }
 
         [HttpPut("{id:int}")]
-        public IActionResult UpdateOneBook([FromRoute(Name = "id")] int id, [FromBody] BookDtoForUpdate bookDto)
+        public async Task<IActionResult> UpdateOneBookAsync([FromRoute(Name = "id")] int id, [FromBody] BookDtoForUpdate bookDto)
         {
-                    if (bookDto is null)
-                    return BadRequest();
+            if (bookDto is null)
+                return BadRequest();
 
-                _manager.BookService.UpdateOneBook(id, bookDto, true);
-                return NoContent();
-
+            await _manager.BookService.UpdateOneBookAsync(id, bookDto, true); // Asenkron çağrı
+            return NoContent();
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteOneBook([FromRoute(Name = "id")] int id)
+        public async Task<IActionResult> DeleteOneBookAsync([FromRoute(Name = "id")] int id)
         {
-          
-                var entity = _manager
-                    .BookService
-                    .GetOneBookById(id, false);
+            var book = await _manager.BookService.GetOneBookAsync(id, false); // Asenkron çağrı
+            if (book == null)
+                return NotFound();
 
-                if (entity == null)
-                    return NotFound();
-
-                _manager.BookService.DeleteOneBook(id, false);
-
-                return NoContent();
+            await _manager.BookService.DeleteOneBookAsync(id, false); // Asenkron çağrı
+            return NoContent();
         }
     }
 }

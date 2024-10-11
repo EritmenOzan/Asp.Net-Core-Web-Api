@@ -11,17 +11,32 @@ namespace Repositories.EFCore
     {
         private readonly RepositoryContext _context;
         private readonly Lazy<IBookRepository> _bookRepository;
+
         public RepositoryManager(RepositoryContext context)
         {
             _context = context;
-            _bookRepository = new Lazy<IBookRepository>(()=> new BookRepository(_context));
+            _bookRepository = new Lazy<IBookRepository>(() => new BookRepository(_context));
         }
 
         public IBookRepository Book => _bookRepository.Value;
 
         public void Save()
         {
-            _context.SaveChanges();
+            throw new NotImplementedException();
         }
+
+        public async Task SaveAsync()
+        {
+           await _context.SaveChangesAsync();
+        }
+
+        Task IRepositoryManager.SaveAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        // Asenkron save metodu
+
+
     }
 }
