@@ -1,4 +1,5 @@
 *Katmanlı mimari kullanılarak temel bir API yapısı oluşturuldu.
+
 -Entities
 -Presantation
 -Repositories
